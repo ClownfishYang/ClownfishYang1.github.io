@@ -10,7 +10,7 @@ date: 2020-11-03 17:45:16
 ---
 之前已经搭建过了一次，后面一直没有使用，最近又心学来潮想弄起来记录点东西。
 搭建网上已经很多了，我就不啰嗦，主要记录下我遇到的问题以及做的一些修改，后续也会持续更新。
-
+<!--more-->
 
 ## 遇到的问题
 
@@ -44,6 +44,29 @@ categories:
 date: 2020-11-03 17:45:16
 ---
 ```
+
+### 首页显示摘要（不显示全文）
+默认会显示全文，查看时很不方便，需要只显示摘要或者文章部分。
+首先需要将`themes/_config.yml`中的`excerpt_description`属性启用，默认是true。
+```
+# Automatically excerpt description in homepage as preamble text.
+excerpt_description: true
+```
+方法有两种，一种是摘要，另一种是截取文章部分。
+```
+# 在文章头部添加description，内容就会被显示在首页上。
+---
+title:
+date:
+description: 这是显示在首页的概述，正文内容均会被隐藏。
+---
+
+# 在文章中加<!--more-->标签，标签前的内容就会被显示在首页上。
+显示的内容
+<!--more-->
+隐藏的内容
+```
+
 
 ### 动画效果
 添加动画效果时需要安装额外的依赖，但是添加完以后会有依赖版本不兼容，所以我使用的CDN。
@@ -226,7 +249,7 @@ tag_icon: true
 
 
 ## 参考博客
-[GitHub + Hexo](https://zhuanlan.zhihu.com/p/26625249)
-[Cxo Theme](https://github.com/Longlongyu/hexo-theme-Cxo)
-[Next Theme](https://github.com/next-theme/hexo-theme-next)
-[Hexo-NexT 主题个性优化](https://guanqr.com/tech/website/hexo-theme-next-customization/)
+[<i class="fas fa-paperclip"></i> GitHub + Hexo](https://zhuanlan.zhihu.com/p/26625249)
+[<i class="fas fa-paperclip"></i> Cxo Theme](https://github.com/Longlongyu/hexo-theme-Cxo)
+[<i class="fas fa-paperclip"></i> Next Theme](https://github.com/next-theme/hexo-theme-next)
+[<i class="fas fa-paperclip"></i> Hexo-NexT 主题个性优化](https://guanqr.com/tech/website/hexo-theme-next-customization/)
