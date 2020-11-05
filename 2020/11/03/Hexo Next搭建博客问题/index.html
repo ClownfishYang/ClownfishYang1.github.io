@@ -31,7 +31,7 @@
 <meta property="og:description" content="之前已经搭建过了一次，后面一直没有使用，最近又心学来潮想弄起来记录点东西。搭建网上已经很多了，我就不啰嗦，主要记录下我遇到的问题以及做的一些修改，后续也会持续更新。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2020-11-03T09:45:16.000Z">
-<meta property="article:modified_time" content="2020-11-05T06:40:13.268Z">
+<meta property="article:modified_time" content="2020-11-05T07:25:52.646Z">
 <meta property="article:author" content="ClownfishYang">
 <meta property="article:tag" content="Hexo">
 <meta property="article:tag" content="Next">
@@ -232,7 +232,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-11-05 14:40:13" itemprop="dateModified" datetime="2020-11-05T14:40:13+08:00">2020-11-05</time>
+                <time title="修改时间：2020-11-05 15:25:52" itemprop="dateModified" datetime="2020-11-05T15:25:52+08:00">2020-11-05</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -250,7 +250,7 @@
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>7.4k</span>
+              <span>7.8k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
@@ -301,8 +301,9 @@
 
 <h3 id="标签图标"><a href="#标签图标" class="headerlink" title="标签图标"></a>标签图标</h3><p>默认标签使用#号，旧版本图片需要修改<code>/themes/next/layout/_macro/post.swig</code>文件，新版本只需要配置就可以实现。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"># 旧版本</span><br><span class="line"># &lt;a href&#x3D;&quot;&#123;&#123; url_for(tag.path) &#125;&#125;&quot; rel&#x3D;&quot;tag&quot;&gt;# &#123;&#123; tag.name &#125;&#125;&lt;&#x2F;a&gt;</span><br><span class="line">&lt;a href&#x3D;&quot;&#123;&#123; url_for(tag.path) &#125;&#125;&quot; rel&#x3D;&quot;tag&quot;&gt;&lt;i class&#x3D;&quot;fa fa-tag&quot;&gt;&lt;&#x2F;i&gt; &#123;&#123; tag.name &#125;&#125;&lt;&#x2F;a&gt;</span><br><span class="line"></span><br><span class="line"># 新版本</span><br><span class="line"># Use icon instead of the symbol # to indicate the tag at the bottom of the post</span><br><span class="line">tag_icon: true</span><br></pre></td></tr></table></figure>
-
-
+<h2 id="部署问题"><a href="#部署问题" class="headerlink" title="部署问题"></a>部署问题</h2><h3 id="hexo-deploy分支管理"><a href="#hexo-deploy分支管理" class="headerlink" title="hexo deploy分支管理"></a>hexo deploy分支管理</h3><p>我使用了<code>develop</code>和<code>master</code>两个分支,<code>develop</code>用于存储未发表的文章，<code>master</code>用于存储已发表的文章，但是使用<code>hexo deploy</code>命令部署的话，我的<code>master</code>分支将会被覆盖成静态文件，但如果不使用<code>hexo deploy</code>命令进行部署的话，就需要手动进行部署，并且我发现手动部署时文章中的更新时间不会被修改过来。<br>并且我还需要作为io的仓库，能够看到我现有维护的代码，能不能新增一个分支<code>pages</code>专门用来生成静态文件，作为io地址访问。<br>首先修改站点的配置文件<code>_config.yml</code>:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">deploy:</span><br><span class="line">  type: git</span><br><span class="line">  repo: https:&#x2F;&#x2F;github.com&#x2F;username&#x2F;username.github.io.git</span><br><span class="line">  branch: pages</span><br></pre></td></tr></table></figure>
+<p>然后执行<code>hexo deploy</code>命令，成功之后会创建一个<code>pages</code>的分支；<br>然后到github仓库中的<code>setting</code>中找到<a href="https://docs.github.com/cn/free-pro-team@latest/github/working-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site">GitHub Pages</a>，将Source 的Branch 选为刚刚创建的<code>pages</code>，然后保存即可。 </p>
 <h2 id="参考博客"><a href="#参考博客" class="headerlink" title="参考博客"></a>参考博客</h2><p><a href="https://zhuanlan.zhihu.com/p/26625249"><i class="fas fa-paperclip"></i> GitHub + Hexo</a><br><a href="https://github.com/Longlongyu/hexo-theme-Cxo"><i class="fas fa-paperclip"></i> Cxo Theme</a><br><a href="https://github.com/next-theme/hexo-theme-next"><i class="fas fa-paperclip"></i> Next Theme</a><br><a href="https://guanqr.com/tech/website/hexo-theme-next-customization/"><i class="fas fa-paperclip"></i> Hexo-NexT 主题个性优化</a></p>
 
     </div>
@@ -390,7 +391,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">1.</span> <span class="nav-text">遇到的问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#hexo-%E5%91%BD%E4%BB%A4%E6%97%A0%E6%B3%95%E6%89%A7%E8%A1%8C"><span class="nav-number">1.1.</span> <span class="nav-text">hexo 命令无法执行</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E7%B1%BB%E9%A1%B5%E3%80%81%E6%A0%87%E7%AD%BE%E9%A1%B5%E5%92%8C%E5%85%B3%E4%BA%8E%E9%A1%B5"><span class="nav-number">1.2.</span> <span class="nav-text">分类页、标签页和关于页</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%A6%96%E9%A1%B5%E6%98%BE%E7%A4%BA%E6%91%98%E8%A6%81%EF%BC%88%E4%B8%8D%E6%98%BE%E7%A4%BA%E5%85%A8%E6%96%87%EF%BC%89"><span class="nav-number">1.3.</span> <span class="nav-text">首页显示摘要（不显示全文）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8A%A8%E7%94%BB%E6%95%88%E6%9E%9C"><span class="nav-number">1.4.</span> <span class="nav-text">动画效果</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%B4%E5%83%8F%E5%8A%A8%E7%94%BB"><span class="nav-number">1.5.</span> <span class="nav-text">头像动画</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Github%E8%A7%92%E8%90%BD"><span class="nav-number">1.6.</span> <span class="nav-text">Github角落</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%87%E7%AD%BE%E5%9B%BE%E6%A0%87"><span class="nav-number">1.7.</span> <span class="nav-text">标签图标</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E5%8D%9A%E5%AE%A2"><span class="nav-number">2.</span> <span class="nav-text">参考博客</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">1.</span> <span class="nav-text">遇到的问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#hexo-%E5%91%BD%E4%BB%A4%E6%97%A0%E6%B3%95%E6%89%A7%E8%A1%8C"><span class="nav-number">1.1.</span> <span class="nav-text">hexo 命令无法执行</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E7%B1%BB%E9%A1%B5%E3%80%81%E6%A0%87%E7%AD%BE%E9%A1%B5%E5%92%8C%E5%85%B3%E4%BA%8E%E9%A1%B5"><span class="nav-number">1.2.</span> <span class="nav-text">分类页、标签页和关于页</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%A6%96%E9%A1%B5%E6%98%BE%E7%A4%BA%E6%91%98%E8%A6%81%EF%BC%88%E4%B8%8D%E6%98%BE%E7%A4%BA%E5%85%A8%E6%96%87%EF%BC%89"><span class="nav-number">1.3.</span> <span class="nav-text">首页显示摘要（不显示全文）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8A%A8%E7%94%BB%E6%95%88%E6%9E%9C"><span class="nav-number">1.4.</span> <span class="nav-text">动画效果</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%B4%E5%83%8F%E5%8A%A8%E7%94%BB"><span class="nav-number">1.5.</span> <span class="nav-text">头像动画</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Github%E8%A7%92%E8%90%BD"><span class="nav-number">1.6.</span> <span class="nav-text">Github角落</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%87%E7%AD%BE%E5%9B%BE%E6%A0%87"><span class="nav-number">1.7.</span> <span class="nav-text">标签图标</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%83%A8%E7%BD%B2%E9%97%AE%E9%A2%98"><span class="nav-number">2.</span> <span class="nav-text">部署问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#hexo-deploy%E5%88%86%E6%94%AF%E7%AE%A1%E7%90%86"><span class="nav-number">2.1.</span> <span class="nav-text">hexo deploy分支管理</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E5%8D%9A%E5%AE%A2"><span class="nav-number">3.</span> <span class="nav-text">参考博客</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -463,7 +464,7 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-area"></i>
     </span>
-    <span title="站点总字数">15k</span>
+    <span title="站点总字数">16k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
