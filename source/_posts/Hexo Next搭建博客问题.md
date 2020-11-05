@@ -246,7 +246,20 @@ github_banner:
 # Use icon instead of the symbol # to indicate the tag at the bottom of the post
 tag_icon: true
 ```
+## 部署问题
 
+### hexo deploy分支管理
+我使用了`develop`和`master`两个分支,`develop`用于存储未发表的文章，`master`用于存储已发表的文章，但是使用`hexo deploy`命令部署的话，我的`master`分支将会被覆盖成静态文件，但如果不使用`hexo deploy`命令进行部署的话，就需要手动进行部署，并且我发现手动部署时文章中的更新时间不会被修改过来。
+并且我还需要作为io的仓库，能够看到我现有维护的代码，能不能新增一个分支`pages`专门用来生成静态文件，作为io地址访问。
+首先修改站点的配置文件`_config.yml`:
+```
+deploy:
+  type: git
+  repo: https://github.com/username/username.github.io.git
+  branch: pages
+```
+然后执行`hexo deploy`命令，成功之后会创建一个`pages`的分支； 
+然后到github仓库中的`setting`中找到[GitHub Pages](https://docs.github.com/cn/free-pro-team@latest/github/working-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)，将Source 的Branch 选为刚刚创建的`pages`，然后保存即可。 
 
 ## 参考博客
 [<i class="fas fa-paperclip"></i> GitHub + Hexo](https://zhuanlan.zhihu.com/p/26625249)
