@@ -86,4 +86,4 @@ theme: next
 deploy:
   type: git
   repo: https://github.com/ClownfishYang/ClownfishYang.github.io.git
-  branch: master
+  branch: pages
