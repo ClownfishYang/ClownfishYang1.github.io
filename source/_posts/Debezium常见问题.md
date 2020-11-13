@@ -85,9 +85,100 @@ org.apache.kafka.connect.errors.ConnectException: The connector is trying to rea
 | schema_only_recovery | 当记录现有偏移量的topic不存在时，从当前binlog的起始偏移量开始读取恢复 |
 
 如果使用的是`schema_only`或`schema_only_recovery`模式，能够使用`when_needed`进行恢复，但是中间丢失的binlog数据也会丢失，最好是在使用`when_needed`前先进行全量恢复使其保持数据一致性。  
-如果使用的其他模式，那么只能手动修改记录的偏移量，但是修改起来很麻烦，因为没有暴露这样的接口，虽然官网提供了[how_to_change_the_offsets_of_the_source_database](https://debezium.io/documentation/faq/#how_to_change_the_offsets_of_the_source_database)的教程，但还是很麻烦。
+如果使用的其他模式，那么只能手动修改记录的偏移量，虽然官网提供了[how_to_change_the_offsets_of_the_source_database](https://debezium.io/documentation/faq/#how_to_change_the_offsets_of_the_source_database)的教程，但修改起来还是很麻烦。
 
+手动修改偏移量：
+```
+# 找到offset.storage的配置(kafka-connector配置文件)
+offset.storage.topic=realtime-connect-offsets
+offset.storage.replication.factor=3
+offset.storage.partitions=2
 
+# 找到bootstrap.servers
+bootstrap.servers=localhost:9092,localhost:9093,localhost:9094
+
+# offset.storage.topic中的消息格式
+["debezium connector name",{"server":"database.server.name"}], {"ts_sec":当前时间戳,"file":"binlog fileName","pos":偏移量,"row":1,"server_id":server id,"event":2}
+
+# 向offset.storage.topic中生产一条消息
+# 因为消息格式为key:value，运行producer时必须加上parse.key和key.separator属性
+kafka-console-producer.sh --broker-list localhost:9092,localhost:9093,localhost:9094 --topic topic-name --property "parse.key=true" --property "key.separator=:"
+# producer启动后生产消息
+[\"mysql_test_name\",{\"server\":\"mysql_test\"}]:{\"ts_sec\":1605149663000,\"file\":\"binlog.000560\",\"pos\":232604132,\"row\":1,\"server_id\":572,\"event\":2}
+```
+修改完成后，重新启动connector就会从修改的binlog pos开始读取，但是中间的数据依旧会丢失。
+
+### Mysql 主库磁盘不足导致binlog不完整
+出现binlog文件被删除的告警错误，发现Connector停止时间才八个小时，而binlog存储的还有24小时，错误信息大致如下，调整了部分信息。
+```
+[2020-11-11 15:15:20,692] INFO WorkerSourceTask{id=mysql_connector_test_1-0} Committing offsets (org.apache.kafka.connect.runtime.WorkerSourceTask:416)
+[2020-11-11 15:15:20,693] INFO WorkerSourceTask{id=mysql_connector_test_1-0} flushing 0 outstanding messages for offset commit (org.apache.kafka.connect.runtime.WorkerSourceTask:433)
+[2020-11-11 15:15:20,693] WARN Couldn't commit processed log positions with the source database due to a concurrent connector shutdown or restart (io.debezium.connector.common.BaseSourceTask:238)
+[2020-11-11 15:15:20,709] INFO WorkerSourceTask{id=mysql_connector_test_2-0} Committing offsets (org.apache.kafka.connect.runtime.WorkerSourceTask:416)
+[2020-11-11 15:15:20,709] INFO WorkerSourceTask{id=mysql_connector_test_2-0} flushing 0 outstanding messages for offset commit (org.apache.kafka.connect.runtime.WorkerSourceTask:433)
+[2020-11-11 15:15:20,709] WARN Couldn't commit processed log positions with the source database due to a concurrent connector shutdown or restart (io.debezium.connector.common.BaseSourceTask:238)
+[2020-11-11 15:15:21,605] INFO [Consumer clientId=mysql_connector_test_2-dbhistory, groupId=mysql_connector_test_2-dbhistory] Revoke previously assigned partitions ddlhistory.sync_36-0 (org.apache.kafka.clients.consumer.internals.ConsumerCoordinator:286)
+[2020-11-11 15:15:21,605] INFO [Consumer clientId=mysql_connector_test_2-dbhistory, groupId=mysql_connector_test_2-dbhistory] Member mysql_connector_test_2-dbhistory-4acebc73-3006-48f7-99d1-0c80976ba224 sending LeaveGroup request to coordinator 172.26.77.37:9092 (id: 2147483644 rack: null) due to the consumer is being closed (org.apache.kafka.clients.consumer.internals.AbstractCoordinator:916)
+[2020-11-11 15:15:21,610] INFO Finished database history recovery of 5009 change(s) in 9828 ms (io.debezium.relational.history.DatabaseHistoryMetrics:119)
+[2020-11-11 15:15:21,931] INFO Step 0: Get all known binlogs from MySQL (io.debezium.connector.mysql.MySqlConnectorTask:551)
+[2020-11-11 15:15:21,936] INFO MySQL has the binlog file 'binlog.000247' required by the connector (io.debezium.connector.mysql.MySqlConnectorTask:570)
+[2020-11-11 15:15:21,963] INFO Requested thread factory for connector MySqlConnector, id = sync_36 named = binlog-client (io.debezium.util.Threads:270)
+[2020-11-11 15:15:22,030] INFO Creating thread debezium-mysqlconnector-sync_36-binlog-client (io.debezium.util.Threads:287)
+[2020-11-11 15:15:22,034] INFO Creating thread debezium-mysqlconnector-sync_36-binlog-client (io.debezium.util.Threads:287)
+[2020-11-11 15:15:22,169] INFO Connected to MySQL binlog at mysql:3306, starting at binlog file 'binlog.000247', pos=218926431, skipping 3 events plus 1 rows (io.debezium.connector.mysql.BinlogReader:1111)
+[2020-11-11 15:15:22,170] INFO Creating thread debezium-mysqlconnector-sync_36-binlog-client (io.debezium.util.Threads:287)
+[2020-11-11 15:15:22,171] INFO Waiting for keepalive thread to start (io.debezium.connector.mysql.BinlogReader:412)
+[2020-11-11 15:15:22,172] INFO Keepalive thread is running (io.debezium.connector.mysql.BinlogReader:419)
+[2020-11-11 15:15:22,273] INFO WorkerSourceTask{id=mysql_connector_test_2-0} Source task finished initialization and start (org.apache.kafka.connect.runtime.WorkerSourceTask:209)
+[2020-11-11 15:15:24,994] INFO [Consumer clientId=mysql_connector_test_1-dbhistory, groupId=mysql_connector_test_1-dbhistory] Revoke previously assigned partitions ddlhistory.sync_39-0 (org.apache.kafka.clients.consumer.internals.ConsumerCoordinator:286)
+[2020-11-11 15:15:24,994] INFO [Consumer clientId=mysql_connector_test_1-dbhistory, groupId=mysql_connector_test_1-dbhistory] Member mysql_connector_test_1-dbhistory-3f3de8fa-2a48-473f-9484-b7d323b55972 sending LeaveGroup request to coordinator 172.26.77.110:9092 (id: 2147483645 rack: null) due to the consumer is being closed (org.apache.kafka.clients.consumer.internals.AbstractCoordinator:916)
+[2020-11-11 15:15:24,998] INFO Finished database history recovery of 8384 change(s) in 13322 ms (io.debezium.relational.history.DatabaseHistoryMetrics:119)
+[2020-11-11 15:15:25,102] INFO Step 0: Get all known binlogs from MySQL (io.debezium.connector.mysql.MySqlConnectorTask:551)
+[2020-11-11 15:15:25,107] INFO Connector requires binlog file 'binlog.000559', but MySQL only has binlog.000384, binlog.000385, binlog.000386, binlog.000387, binlog.000388, binlog.000389, binlog.000390, binlog.000391, binlog.000392, binlog.000393, binlog.000394, binlog.000395, binlog.000396, binlog.000397, binlog.000398, binlog.000399, binlog.000400, binlog.000401, binlog.000402, binlog.000403, binlog.000404, binlog.000405, binlog.000406, binlog.000407, binlog.000408, binlog.000409, binlog.000410, binlog.000411, binlog.000412, binlog.000413, binlog.000414, binlog.000415, binlog.000416, binlog.000417, binlog.000418, binlog.000419, binlog.000420, binlog.000421, binlog.000422, binlog.000423, binlog.000424, binlog.000425, binlog.000426, binlog.000427, binlog.000428, binlog.000429, binlog.000430, binlog.000431, binlog.000432, binlog.000433, binlog.000434, binlog.000435, binlog.000436, binlog.000437, binlog.000438, binlog.000439, binlog.000440, binlog.000441, binlog.000442, binlog.000443, binlog.000444, binlog.000445, binlog.000446, binlog.000447, binlog.000448, binlog.000449, binlog.000450, binlog.000451, binlog.000452, binlog.000453, binlog.000454, binlog.000455, binlog.000456, binlog.000457, binlog.000458, binlog.000459, binlog.000460, binlog.000461, binlog.000462, binlog.000463, binlog.000464, binlog.000465, binlog.000466, binlog.000467, binlog.000468, binlog.000469, binlog.000470, binlog.000471, binlog.000472, binlog.000473, binlog.000474, binlog.000475, binlog.000476, binlog.000477, binlog.000478, binlog.000479, binlog.000480, binlog.000481, binlog.000482, binlog.000483, binlog.000484, binlog.000485, binlog.000486, binlog.000487, binlog.000488, binlog.000489, binlog.000490, binlog.000491, binlog.000492, binlog.000493, binlog.000494, binlog.000495, binlog.000496, binlog.000497, binlog.000498, binlog.000499, binlog.000500, binlog.000501, binlog.000502, binlog.000503, binlog.000504, binlog.000505, binlog.000506, binlog.000507, binlog.000508, binlog.000509, binlog.000510, binlog.000511, binlog.000512, binlog.000513, binlog.000514, binlog.000515, binlog.000516, binlog.000517, binlog.000518, binlog.000519, binlog.000520, binlog.000521, binlog.000522, binlog.000523, binlog.000524, binlog.000525, binlog.000526, binlog.000527, binlog.000528, binlog.000529, binlog.000530, binlog.000531, binlog.000532, binlog.000533, binlog.000534, binlog.000535, binlog.000536, binlog.000537, binlog.000538, binlog.000539, binlog.000540, binlog.000541, binlog.000542, binlog.000543, binlog.000544, binlog.000545, binlog.000546, binlog.000547, binlog.000548, binlog.000549, binlog.000550, binlog.000551, binlog.000552, binlog.000553, binlog.000554, binlog.000555, binlog.000556, binlog.000557, binlog.000558 (io.debezium.connector.mysql.MySqlConnectorTask:566)
+[2020-11-11 15:15:25,108] INFO Stopping down connector (io.debezium.connector.common.BaseSourceTask:187)
+[2020-11-11 15:15:25,108] INFO Stopping MySQL connector task (io.debezium.connector.mysql.MySqlConnectorTask:458)
+[2020-11-11 15:15:25,108] INFO WorkerSourceTask{id=mysql_connector_test_1-0} Committing offsets (org.apache.kafka.connect.runtime.WorkerSourceTask:416)
+[2020-11-11 15:15:25,108] INFO WorkerSourceTask{id=mysql_connector_test_1-0} flushing 0 outstanding messages for offset commit (org.apache.kafka.connect.runtime.WorkerSourceTask:433)
+[2020-11-11 15:15:25,109] ERROR WorkerSourceTask{id=mysql_connector_test_1-0} Task threw an uncaught and unrecoverable exception (org.apache.kafka.connect.runtime.WorkerTask:179)
+org.apache.kafka.connect.errors.ConnectException: The connector is trying to read binlog starting at binlog file 'binlog.000559', pos=271193190, skipping 3 events plus 1 rows, but this is no longer available on the server. Reconfigure the connector to use a snapshot when needed.
+	at io.debezium.connector.mysql.MySqlConnectorTask.start(MySqlConnectorTask.java:133)
+	at io.debezium.connector.common.BaseSourceTask.start(BaseSourceTask.java:101)
+	at org.apache.kafka.connect.runtime.WorkerSourceTask.execute(WorkerSourceTask.java:208)
+	at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:177)
+	at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:227)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+	at java.lang.Thread.run(Thread.java:745)
+[2020-11-11 15:15:25,110] ERROR WorkerSourceTask{id=mysql_connector_test_1-0} Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:180)
+[2020-11-11 15:15:25,110] INFO Connector has already been stopped (io.debezium.connector.common.BaseSourceTask:179)
+[2020-11-11 15:15:25,110] INFO [Producer clientId=connector-producer-mysql_connector_test_1-0] Closing the Kafka producer with timeoutMillis = 30000 ms. (org.apache.kafka.clients.producer.KafkaProducer:1183)[2020-11-11 15:15:30,697] INFO WorkerSourceTask{id=mysql_connector_test_1-0} Committing offsets (org.apache.kafka.connect.runtime.WorkerSourceTask:416)
+```
+有个关键的信息是，Debezium保存的是binlog.000559，而主库却只有385-558的binlog，猜测可能跟binlog清理设置有关系。  
+将快照模式依次调整为`schema_only_recovery`和`when_needed`都报出了相同的错误：
+```
+2020-11-12 01:51:06,372] ERROR WorkerSourceTask{id=mysql_connector_test_1-0} Task threw an uncaught and unrecoverable exception (org.apache.kafka.connect.runtime.WorkerTask:179)
+org.apache.kafka.connect.errors.ConnectException: binlog truncated in the middle of event; consider out of disk space on master; the first event 'binlog.000559' at 271193190, the last event read from '/data/dbdata/mysqllog/binlog/binlog.000559' at 271193190, the last
+ byte read from '/data/dbdata/mysqllog/binlog/binlog.000559' at 271193209. Error code: 1236; SQLSTATE: HY000.
+        at io.debezium.connector.mysql.AbstractReader.wrap(AbstractReader.java:230)
+        at io.debezium.connector.mysql.AbstractReader.failed(AbstractReader.java:196)
+        at io.debezium.connector.mysql.BinlogReader$ReaderThreadLifecycleListener.onCommunicationFailure(BinlogReader.java:1125)
+        at com.github.shyiko.mysql.binlog.BinaryLogClient.listenForEventPackets(BinaryLogClient.java:985)
+        at com.github.shyiko.mysql.binlog.BinaryLogClient.connect(BinaryLogClient.java:581)
+        at com.github.shyiko.mysql.binlog.BinaryLogClient$7.run(BinaryLogClient.java:860)
+        at java.lang.Thread.run(Thread.java:745)
+Caused by: com.github.shyiko.mysql.binlog.network.ServerException: binlog truncated in the middle of event; consider out of disk space on master; the first event 'binlog.000559' at 271193190, the last event read from '/data/dbdata/mysqllog/binlog/binlog.000559' at 27
+1193190, the last byte read from '/data/dbdata/mysqllog/binlog/binlog.000559' at 271193209.
+        at com.github.shyiko.mysql.binlog.BinaryLogClient.listenForEventPackets(BinaryLogClient.java:949)
+        ... 3 more
+[2020-11-12 01:51:06,372] ERROR WorkerSourceTask{id=mysql_connector_test_1-0} Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:180)
+[2020-11-12 01:51:06,372] INFO Stopping down connector (io.debezium.connector.common.BaseSourceTask:187)
+[2020-11-12 01:51:06,372] INFO Stopping MySQL connector task (io.debezium.connector.mysql.MySqlConnectorTask:458)
+```
+主库是存在binlog.000559这个文件的，但是可能由于主库磁盘存储不足导致日志记录不完整，被截断了。
+通过[MySQL Replication: ‘Got fatal error 1236’ causes and cures](https://www.percona.com/blog/2014/10/08/mysql-replication-got-fatal-error-1236-causes-and-cures/)
+和[Got fatal error 1236原因](http://blog.itpub.net/22664653/viewspace-1714269/)了解到，只能将binlog指向下一个可用的binlog file，所以只能通过`手动修改偏移量`的方式解决。
 
 ## 参考文章
 [<i class="fas fa-paperclip"></i> debezium documentation](https://debezium.io/documentation/reference/1.3/connectors/mysql.html)
