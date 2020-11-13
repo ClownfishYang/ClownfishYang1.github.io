@@ -23,17 +23,22 @@
     var CONFIG = {"hostname":"clownfishyang.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="须知少时凌云志，曾许人间第一流。">
-<meta property="og:type" content="website">
+  <meta name="description" content="最近正在中心整理之前学得一些知识，正好有空整理下Spark的大部分实现，项目会放到SparkJobDemo上。 项目构建　　项目使用的是Scala+Maven，基于Spark-Scala-Maven-Example，也可以换成SparkGradleTemplate，重点不应该放在这个上面。　　1. 项目初始化 12git clone https:&#x2F;&#x2F;github.com&amp;#">
+<meta property="og:type" content="article">
 <meta property="og:title" content="ClownfishYang Blog">
-<meta property="og:url" content="https://clownfishyang.github.io/tags/Hexo/index.html">
+<meta property="og:url" content="https://clownfishyang.github.io/2020/11/10/Spark%E9%A1%B9%E7%9B%AEDemo/index.html">
 <meta property="og:site_name" content="ClownfishYang Blog">
-<meta property="og:description" content="须知少时凌云志，曾许人间第一流。">
+<meta property="og:description" content="最近正在中心整理之前学得一些知识，正好有空整理下Spark的大部分实现，项目会放到SparkJobDemo上。 项目构建　　项目使用的是Scala+Maven，基于Spark-Scala-Maven-Example，也可以换成SparkGradleTemplate，重点不应该放在这个上面。　　1. 项目初始化 12git clone https:&#x2F;&#x2F;github.com&amp;#">
 <meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-11-10T07:09:30.000Z">
+<meta property="article:modified_time" content="2020-11-13T02:19:21.601Z">
 <meta property="article:author" content="ClownfishYang">
+<meta property="article:tag" content="Spark">
+<meta property="article:tag" content="大数据">
+<meta property="article:tag" content="Demo">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="https://clownfishyang.github.io/tags/Hexo/">
+<link rel="canonical" href="https://clownfishyang.github.io/2020/11/10/Spark%E9%A1%B9%E7%9B%AEDemo/">
 
 
 <script id="page-configurations">
@@ -41,12 +46,12 @@
   CONFIG.page = {
     sidebar: "",
     isHome : false,
-    isPost : false,
+    isPost : true,
     lang   : 'zh-CN'
   };
 </script>
 
-  <title>标签: Hexo | ClownfishYang Blog</title>
+  <title> | ClownfishYang Blog</title>
   
 
 
@@ -190,51 +195,118 @@
         <div class="content-wrap">
           
 
-          <div class="content tag">
+          <div class="content post posts-expand">
             
 
+    
   
   
-  
-  <div class="post-block">
-    <div class="posts-collapse">
-      <div class="collection-title">
-        <h2 class="collection-header">Hexo
-          <small>标签</small>
-        </h2>
-      </div>
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://clownfishyang.github.io/2020/11/10/Spark%E9%A1%B9%E7%9B%AEDemo/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://upload.jianshu.io/users/upload_avatars/525624/28c068b9-5f2b-4ff8-bc40-3a9e53773228.jpeg?imageMogr2/auto-orient/strip|imageView2/1/w/96/h/96/format/webp">
+      <meta itemprop="name" content="ClownfishYang">
+      <meta itemprop="description" content="须知少时凌云志，曾许人间第一流。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ClownfishYang Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          <a href="https://github.com/ClownfishYang/ClownfishYang.github.io/tree/master/source/_posts/Spark%E9%A1%B9%E7%9B%AEDemo.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-11-10 15:09:30" itemprop="dateCreated datePublished" datetime="2020-11-10T15:09:30+08:00">2020-11-10</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-11-13 10:19:21" itemprop="dateModified" datetime="2020-11-13T10:19:21+08:00">2020-11-13</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8A%80%E6%9C%AF/" itemprop="url" rel="index"><span itemprop="name">技术</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>988</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
 
       
-    <div class="collection-year">
-      <span class="collection-header">2020</span>
+        <p>　　最近正在中心整理之前学得一些知识，正好有空整理下Spark的大部分实现，项目会放到<a href="">SparkJobDemo</a>上。</p>
+<h3 id="项目构建"><a href="#项目构建" class="headerlink" title="项目构建"></a>项目构建</h3><p>　　项目使用的是Scala+Maven，基于<a href="https://github.com/martinprobson/Spark-Scala-Maven-Example">Spark-Scala-Maven-Example</a>，也可以换成<a href="https://github.com/faizanahemad/spark-gradle-template">SparkGradleTemplate</a>，重点不应该放在这个上面。<br>　　1. 项目初始化</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git clone https:&#x2F;&#x2F;github.com&#x2F;martinprobson&#x2F;Spark-Scala-Maven-Example.git</span><br><span class="line">mvn -U clean install</span><br></pre></td></tr></table></figure>
+<pre><code>2. 单元测试
+项目集成了很多常用的功能，例如上下文初始化trait(SparkEnv)、配置文件加载(typesafe)和日志文件(grizzled)，并且继承几个简单的单元测试(SparkTest)，能够很好的检测环境问题。</code></pre>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">test(&quot;empsRDD rowcount&quot;) &#123; spark &#x3D;&gt;</span><br><span class="line">  val empsRDD &#x3D; spark.sparkContext.parallelize(getInputData(&quot;&#x2F;data&#x2F;employees.json&quot;), 5)</span><br><span class="line">  assert(empsRDD.count &#x3D;&#x3D;&#x3D; 1000)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">test(&quot;titlesRDD rowcount&quot;) &#123; spark &#x3D;&gt;</span><br><span class="line">  val titlesRDD &#x3D; spark.sparkContext.parallelize(getInputData(&quot;&#x2F;data&#x2F;titles.json&quot;), 5)</span><br><span class="line">  assert(titlesRDD.count &#x3D;&#x3D;&#x3D; 1470)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">private def getInputData(name: String): Seq[String] &#x3D; &#123;</span><br><span class="line">  val is: InputStream &#x3D; getClass.getResourceAsStream(name)</span><br><span class="line">  scala.io.Source.fromInputStream(is).getLines.toSeq</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="常见业务处理"><a href="#常见业务处理" class="headerlink" title="常见业务处理"></a>常见业务处理</h3>
     </div>
 
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
+    
+    
+    
 
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2020-11-03T17:45:16+08:00"
-              content="2020-11-03">
-          11-03
-        </time>
-      </div>
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/Spark/" rel="tag"><i class="fa fa-tag"></i> Spark</a>
+              <a href="/tags/%E5%A4%A7%E6%95%B0%E6%8D%AE/" rel="tag"><i class="fa fa-tag"></i> 大数据</a>
+              <a href="/tags/Demo/" rel="tag"><i class="fa fa-tag"></i> Demo</a>
+          </div>
 
-      <div class="post-title">
-          <a class="post-title-link" href="/2020/11/03/Hexo%20Next%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2%E9%97%AE%E9%A2%98/" itemprop="url">
-            <span itemprop="name">Hexo Next搭建博客问题</span>
-          </a>
-      </div>
+        
 
-    </header>
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/11/10/hello-world/" rel="prev" title="Hello World">
+      <i class="fa fa-chevron-left"></i> Hello World
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
   </article>
-
-    </div>
-  </div>
   
   
-  
-
   
 
 
@@ -287,6 +359,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%A1%B9%E7%9B%AE%E6%9E%84%E5%BB%BA"><span class="nav-number">1.</span> <span class="nav-text">项目构建</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B8%B8%E8%A7%81%E4%B8%9A%E5%8A%A1%E5%A4%84%E7%90%86"><span class="nav-number">2.</span> <span class="nav-text">常见业务处理</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
