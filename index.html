@@ -196,7 +196,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://clownfishyang.github.io/2020/11/10/Spark%E9%A1%B9%E7%9B%AEDemo/">
+    <link itemprop="mainEntityOfPage" href="https://clownfishyang.github.io/2020/11/13/Spark%E8%81%9A%E5%90%88%E7%AE%97%E5%AD%90/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="https://upload.jianshu.io/users/upload_avatars/525624/28c068b9-5f2b-4ff8-bc40-3a9e53773228.jpeg?imageMogr2/auto-orient/strip|imageView2/1/w/96/h/96/format/webp">
@@ -210,7 +210,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2020/11/10/Spark%E9%A1%B9%E7%9B%AEDemo/" class="post-title-link" itemprop="url">未命名</a>
+            <a href="/2020/11/13/Spark%E8%81%9A%E5%90%88%E7%AE%97%E5%AD%90/" class="post-title-link" itemprop="url">SparkRDD聚合算子</a>
         </h2>
 
         <div class="post-meta">
@@ -220,14 +220,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2020-11-10 15:09:30" itemprop="dateCreated datePublished" datetime="2020-11-10T15:09:30+08:00">2020-11-10</time>
+              <time title="创建时间：2020-11-13 16:40:42" itemprop="dateCreated datePublished" datetime="2020-11-13T16:40:42+08:00">2020-11-13</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-11-13 10:19:21" itemprop="dateModified" datetime="2020-11-13T10:19:21+08:00">2020-11-13</time>
+                <time title="修改时间：2020-11-17 11:48:32" itemprop="dateModified" datetime="2020-11-17T11:48:32+08:00">2020-11-17</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -245,14 +245,14 @@
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>988</span>
+              <span>3.8k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="far fa-clock"></i>
               </span>
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>1 分钟</span>
+              <span>3 分钟</span>
             </span>
 
         </div>
@@ -264,14 +264,110 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>　　最近正在中心整理之前学得一些知识，正好有空整理下Spark的大部分实现，项目会放到<a href="">SparkJobDemo</a>上。</p>
-<h3 id="项目构建"><a href="#项目构建" class="headerlink" title="项目构建"></a>项目构建</h3><p>　　项目使用的是Scala+Maven，基于<a href="https://github.com/martinprobson/Spark-Scala-Maven-Example">Spark-Scala-Maven-Example</a>，也可以换成<a href="https://github.com/faizanahemad/spark-gradle-template">SparkGradleTemplate</a>，重点不应该放在这个上面。<br>　　1. 项目初始化</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git clone https:&#x2F;&#x2F;github.com&#x2F;martinprobson&#x2F;Spark-Scala-Maven-Example.git</span><br><span class="line">mvn -U clean install</span><br></pre></td></tr></table></figure>
-<pre><code>2. 单元测试
-项目集成了很多常用的功能，例如上下文初始化trait(SparkEnv)、配置文件加载(typesafe)和日志文件(grizzled)，并且继承几个简单的单元测试(SparkTest)，能够很好的检测环境问题。</code></pre>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">test(&quot;empsRDD rowcount&quot;) &#123; spark &#x3D;&gt;</span><br><span class="line">  val empsRDD &#x3D; spark.sparkContext.parallelize(getInputData(&quot;&#x2F;data&#x2F;employees.json&quot;), 5)</span><br><span class="line">  assert(empsRDD.count &#x3D;&#x3D;&#x3D; 1000)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">test(&quot;titlesRDD rowcount&quot;) &#123; spark &#x3D;&gt;</span><br><span class="line">  val titlesRDD &#x3D; spark.sparkContext.parallelize(getInputData(&quot;&#x2F;data&#x2F;titles.json&quot;), 5)</span><br><span class="line">  assert(titlesRDD.count &#x3D;&#x3D;&#x3D; 1470)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">private def getInputData(name: String): Seq[String] &#x3D; &#123;</span><br><span class="line">  val is: InputStream &#x3D; getClass.getResourceAsStream(name)</span><br><span class="line">  scala.io.Source.fromInputStream(is).getLines.toSeq</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+          <p>　　Spark RDD聚合算子的使用区别，持续更新。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/11/13/Spark%E8%81%9A%E5%90%88%E7%AE%97%E5%AD%90/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
 
-<h3 id="常见业务处理"><a href="#常见业务处理" class="headerlink" title="常见业务处理"></a>常见业务处理</h3>
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://clownfishyang.github.io/2020/11/10/Spark%E9%A1%B9%E7%9B%AEDemo/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://upload.jianshu.io/users/upload_avatars/525624/28c068b9-5f2b-4ff8-bc40-3a9e53773228.jpeg?imageMogr2/auto-orient/strip|imageView2/1/w/96/h/96/format/webp">
+      <meta itemprop="name" content="ClownfishYang">
+      <meta itemprop="description" content="须知少时凌云志，曾许人间第一流。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ClownfishYang Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/11/10/Spark%E9%A1%B9%E7%9B%AEDemo/" class="post-title-link" itemprop="url">Spark项目Demo</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-11-10 15:09:30" itemprop="dateCreated datePublished" datetime="2020-11-10T15:09:30+08:00">2020-11-10</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-11-18 10:34:37" itemprop="dateModified" datetime="2020-11-18T10:34:37+08:00">2020-11-18</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8A%80%E6%9C%AF/" itemprop="url" rel="index"><span itemprop="name">技术</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.6k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>2 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>　　整理Spark的大部分实现，项目会放到<a href="https://github.com/ClownfishYang/SparkJobTemplate">SparkJobDemo</a>上，持续更新。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/11/10/Spark%E9%A1%B9%E7%9B%AEDemo/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -400,7 +496,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-11-13 10:19:21" itemprop="dateModified" datetime="2020-11-13T10:19:21+08:00">2020-11-13</time>
+                <time title="修改时间：2020-11-13 10:25:37" itemprop="dateModified" datetime="2020-11-13T10:25:37+08:00">2020-11-13</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -623,7 +719,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-count">5</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -636,7 +732,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-count">11</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -680,12 +776,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-area"></i>
     </span>
-    <span title="站点总字数">30k</span>
+    <span title="站点总字数">35k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">27 分钟</span>
+    <span title="站点阅读时长">32 分钟</span>
 </div>
   <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
   </div>

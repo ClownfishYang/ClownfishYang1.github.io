@@ -1,26 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title></title>
-    <url>/2020/11/10/Spark%E9%A1%B9%E7%9B%AEDemo/</url>
-    <content><![CDATA[<p>　　最近正在中心整理之前学得一些知识，正好有空整理下Spark的大部分实现，项目会放到<a href="">SparkJobDemo</a>上。</p>
-<h3 id="项目构建"><a href="#项目构建" class="headerlink" title="项目构建"></a>项目构建</h3><p>　　项目使用的是Scala+Maven，基于<a href="https://github.com/martinprobson/Spark-Scala-Maven-Example">Spark-Scala-Maven-Example</a>，也可以换成<a href="https://github.com/faizanahemad/spark-gradle-template">SparkGradleTemplate</a>，重点不应该放在这个上面。<br>　　1. 项目初始化</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git clone https:&#x2F;&#x2F;github.com&#x2F;martinprobson&#x2F;Spark-Scala-Maven-Example.git</span><br><span class="line">mvn -U clean install</span><br></pre></td></tr></table></figure>
-<pre><code>2. 单元测试
-项目集成了很多常用的功能，例如上下文初始化trait(SparkEnv)、配置文件加载(typesafe)和日志文件(grizzled)，并且继承几个简单的单元测试(SparkTest)，能够很好的检测环境问题。</code></pre>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">test(&quot;empsRDD rowcount&quot;) &#123; spark &#x3D;&gt;</span><br><span class="line">  val empsRDD &#x3D; spark.sparkContext.parallelize(getInputData(&quot;&#x2F;data&#x2F;employees.json&quot;), 5)</span><br><span class="line">  assert(empsRDD.count &#x3D;&#x3D;&#x3D; 1000)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">test(&quot;titlesRDD rowcount&quot;) &#123; spark &#x3D;&gt;</span><br><span class="line">  val titlesRDD &#x3D; spark.sparkContext.parallelize(getInputData(&quot;&#x2F;data&#x2F;titles.json&quot;), 5)</span><br><span class="line">  assert(titlesRDD.count &#x3D;&#x3D;&#x3D; 1470)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">private def getInputData(name: String): Seq[String] &#x3D; &#123;</span><br><span class="line">  val is: InputStream &#x3D; getClass.getResourceAsStream(name)</span><br><span class="line">  scala.io.Source.fromInputStream(is).getLines.toSeq</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="常见业务处理"><a href="#常见业务处理" class="headerlink" title="常见业务处理"></a>常见业务处理</h3>]]></content>
-      <categories>
-        <category>技术</category>
-      </categories>
-      <tags>
-        <tag>Spark</tag>
-        <tag>大数据</tag>
-        <tag>Demo</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Hexo Next搭建博客问题</title>
     <url>/2020/11/03/Hexo%20Next%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2%E9%97%AE%E9%A2%98/</url>
     <content><![CDATA[<p>之前已经搭建过了一次，后面一直没有使用，最近又心学来潮想弄起来记录点东西。<br>搭建网上已经很多了，我就不啰嗦，主要记录下我遇到的问题以及做的一些修改，后续也会持续更新。</p>
@@ -70,6 +50,44 @@
       </tags>
   </entry>
   <entry>
+    <title>SparkRDD聚合算子</title>
+    <url>/2020/11/13/Spark%E8%81%9A%E5%90%88%E7%AE%97%E5%AD%90/</url>
+    <content><![CDATA[<p>　　Spark RDD聚合算子的使用区别，持续更新。</p>
+<a id="more"></a>
+
+<h2 id="聚合算子"><a href="#聚合算子" class="headerlink" title="聚合算子"></a>聚合算子</h2><h3 id="groupByKey"><a href="#groupByKey" class="headerlink" title="groupByKey"></a>groupByKey</h3><p>　　在一个PairRDD上调用，返回一个(k,iterable<v>)，将所有相同key的pair<strong>分组</strong>到一个无序的集合序列中。所有的pair都加载到内存中进行存储计算，若一个key对应的value过多，则容易导致内溢出。<br>以WordCount为例：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">val words &#x3D; Array(&quot;one&quot;, &quot;two&quot;, &quot;two&quot;, &quot;three&quot;, &quot;three&quot;, &quot;three&quot;)</span><br><span class="line">val wordPairsRDD &#x3D; sc.parallelize(words).map(word &#x3D;&gt; (word, 1))</span><br><span class="line">val wordCountsWithGroup &#x3D; wordPairsRDD.groupByKey().map(t &#x3D;&gt; (t._1, t._2.sum)).collect()</span><br></pre></td></tr></table></figure>
+<p>当使用groupByKey时，通过调用<a href="">Partitioner</a>将所有pair移动到key对应的计算节点，当移动的数据量大于节点的总内存时就会导致内存溢出(<code>MEMORY_ONLY</code>存储级别)。<br>也就是说所有的数据都从mapTask发送到reduceTask，没有优化网络IO，只有在reductTask需要使用到所有value时才应该使用。<br><img src="https://img.snailshub.com/images/2018/11/08/20160514090524_98484.png"><br>针对上面的例子，可以先计算以后在移动（预处理），而不需要移动以后在计算，这会导致大量无用的资源消耗。</p>
+<h3 id="reduceByKey"><a href="#reduceByKey" class="headerlink" title="reduceByKey"></a>reduceByKey</h3><p>　　跟<code>groupByKey</code>类似，主要的不同点是<strong>聚合</strong>，<code>reduceByKey</code>在调用时需要传入一个<code>Function</code>(lamdba函数)，该函数必须是类型<code>(V,V) =&gt; V</code>，在节点数据移动之前先对该节点的数据进行<code>Function</code>的处理（预处理），在数据移动之后目标节点会再次对分组的数据进行再一次<code>Function</code>处理产生最后的结果。<code>Function</code>会在mapTask和reduceTask上执行，优化了网络IO，很多聚合场景都能够使用。<br>以WordCount为例：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">val words &#x3D; Array(&quot;one&quot;, &quot;two&quot;, &quot;two&quot;, &quot;three&quot;, &quot;three&quot;, &quot;three&quot;)</span><br><span class="line">val wordPairsRDD &#x3D; sc.parallelize(words).map(word &#x3D;&gt; (word, 1))</span><br><span class="line">val wordCountsWithReduce &#x3D; wordPairsRDD.reduceByKey(_ + _).collect()</span><br></pre></td></tr></table></figure>
+<p><img src="https://img.snailshub.com/images/2018/11/08/reduce_by.png"><br>针对上面的例子，<code>reduceByKey</code>通过对计算数据的预处理，减少了移动到目标节点的数据量，降低了内存溢出的风险。</p>
+<h3 id="foldByKey"><a href="#foldByKey" class="headerlink" title="foldByKey"></a>foldByKey</h3><p>　　<code>foldByKey</code>用于对PairRDD进行折叠/聚合操作，跟<code>reduceByKey</code>类似，不同在于提供了初始值(zero Value)作为<code>Function</code>计算的初始值，这在部分场景下很有用。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">val words &#x3D; Array(&quot;one&quot;, &quot;two&quot;, &quot;two&quot;, &quot;three&quot;, &quot;three&quot;, &quot;three&quot;)</span><br><span class="line">val wordPairsRDD &#x3D; sc.parallelize(words).map(word &#x3D;&gt; (word, 1))</span><br><span class="line">val wordCountsWithFold &#x3D; wordPairsRDD.foldByKey(0)(_ + _).collect()</span><br></pre></td></tr></table></figure>
+
+<h3 id="aggregate-aggregatebykey"><a href="#aggregate-aggregatebykey" class="headerlink" title="aggregate/aggregatebykey"></a>aggregate/aggregatebykey</h3><p>　　<code>aggregate</code>和<code>aggregatebykey</code>都可以进行聚合操作，都会先对每个分区里的元素与zeroValue进行<code>combine</code>聚合(seqOp,(U, T) =&gt; U)，然后将每个分区的结果再与zeroValue进行<code>combine</code>操作(combOp,(U, U) =&gt; U)。<br>　　区别在于<code>aggregate</code>对非PairRDD也能进行聚合操作，且返回的类型可以不和RDD中的类型一致，但<code>aggregatebykey</code>只能对PairRDD进行聚合操作，且返回的类型还是PairRDD，虽然key类型还是一致，但RDD中的value类型可以不一致。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"># aggregatebykey</span><br><span class="line">val words &#x3D; Array(&quot;one&quot;, &quot;two&quot;, &quot;two&quot;, &quot;three&quot;, &quot;three&quot;, &quot;three&quot;)</span><br><span class="line">val wordPairsRDD &#x3D; sc.parallelize(words).map(word &#x3D;&gt; (word, 1))</span><br><span class="line">val wordCountsWithAggregate &#x3D; wordPairsRDD.aggregateByKey(0)(((a, v) &#x3D;&gt; a + v), ((a, v) &#x3D;&gt; a + v))</span><br><span class="line"># aggregate</span><br><span class="line">sc.parallelize(words).aggregate(Map[String, Int]())((a,v) &#x3D;&gt; &#123;</span><br><span class="line">      a + (v -&gt; (a.getOrElse(v, 0) + 1))</span><br><span class="line">    &#125;,(a,v) &#x3D;&gt; &#123;</span><br><span class="line">      a ++ v.map(t &#x3D;&gt; t._1 -&gt; (t._2 + a.getOrElse(t._1, 0)))</span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line"># reduce对比</span><br><span class="line">val userAccesses &#x3D; sc.parallelize(Array(&quot;u1&quot;, &quot;site1&quot;), (&quot;u2&quot;, &quot;site1&quot;), (&quot;u1&quot;, &quot;site1&quot;), (&quot;u2&quot;, &quot;site3&quot;), (&quot;u2&quot;, &quot;site4&quot;))</span><br><span class="line">userAccesses.map(userSite &#x3D;&gt; (userSite._1, Set(userSite._2))).reduceByKey(_++_)</span><br><span class="line">userAccesses.aggregateByKey(collection.mutable.Set[String]())((set,v) &#x3D;&gt; set +&#x3D; v, (setOne, setTwo) &#x3D;&gt; setOne ++&#x3D; setTwo)</span><br></pre></td></tr></table></figure>
+<p><code>aggregatebykey</code>与<code>reduceByKey</code>的功能类似，但<code>aggregatebykey</code>支持不同的返回值类型，且提供了zeroValue能够减少计算过程中中间变量的产生，上面的对比例子使用了可变set，减少每次计算set的生成。</p>
+<h3 id="combineByKey"><a href="#combineByKey" class="headerlink" title="combineByKey"></a>combineByKey</h3><p><code>combineByKey(combineByKeyWithClassTag)</code>是通用的核心高级函数，通过一组自定义的聚合函数对PairRDD中的每个key的元素进行聚合，返回值的类型可以不和RDD中的类型一致((K,V) =&gt; C)，是大多数聚合函数的底层实现。<br>提供三个自定义函数：</p>
+<ol>
+<li>createCombiner：(V =&gt; C)，将当前key对应的V作为参数，进行类型转换并将其返回，即partition-key的初始化操作；</li>
+<li>mergeValue：((C,V) =&gt; C)，将元素V合并到之前的元素C(createCombiner的返回值)上，在partition内进行，即shuffle前执行；</li>
+<li>mergeCombiners：将两个C进行合并，在不同partition内进行，即shuffle后执行；</li>
+</ol>
+<p>当使用<code>combineByKey</code>进行聚合操作时，若当处理的元素为新元素时(partition中首次出现的key对应的V)，使用<code>createCombiner</code>进行初始化操作；若不是新元素，说明已经初始化完成，调用<code>mergeValue</code>将其合并到C中；由于计算可能分为多个partition，最终合并需要调用<code>mergeCombiners</code>将所有结果合并。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">val words &#x3D; Array(&quot;one&quot;, &quot;two&quot;, &quot;two&quot;, &quot;three&quot;, &quot;three&quot;, &quot;three&quot;)</span><br><span class="line">val wordPairsRDD &#x3D; sc.parallelize(words).map(word &#x3D;&gt; (word, 1))</span><br><span class="line">val wordCountsWithAggregate &#x3D; wordPairsRDD.combineByKey(v:Int &#x3D;&gt; v, (a:Int,b:Int) &#x3D;&gt; a+b,(c:Int,d:Int)&#x3D;&gt;c+d)</span><br></pre></td></tr></table></figure>
+
+
+]]></content>
+      <categories>
+        <category>技术</category>
+      </categories>
+      <tags>
+        <tag>Spark</tag>
+        <tag>大数据</tag>
+        <tag>聚合函数</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Hello World</title>
     <url>/2020/11/10/hello-world/</url>
     <content><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
@@ -88,6 +106,42 @@
 
 <p>More info: <a href="https://hexo.io/docs/deployment.html">Deployment</a></p>
 ]]></content>
+  </entry>
+  <entry>
+    <title>Spark项目Demo</title>
+    <url>/2020/11/10/Spark%E9%A1%B9%E7%9B%AEDemo/</url>
+    <content><![CDATA[<p>　　整理Spark的大部分实现，项目会放到<a href="https://github.com/ClownfishYang/SparkJobTemplate">SparkJobDemo</a>上，持续更新。</p>
+<a id="more"></a>
+
+<h2 id="项目构建"><a href="#项目构建" class="headerlink" title="项目构建"></a>项目构建</h2><p>　　项目使用的是Scala+Maven，基于<a href="https://github.com/martinprobson/Spark-Scala-Maven-Example">Spark-Scala-Maven-Example</a>，也可以换成<a href="https://github.com/faizanahemad/spark-gradle-template">SparkGradleTemplate</a>，重点不应该放在这个上面。<br>　　1. 项目初始化</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git clone https:&#x2F;&#x2F;github.com&#x2F;martinprobson&#x2F;Spark-Scala-Maven-Example.git</span><br><span class="line">mvn -U clean install</span><br></pre></td></tr></table></figure>
+<pre><code>2. 单元测试
+项目集成了很多常用的功能，例如上下文初始化trait(SparkEnv)、配置文件加载(typesafe)和日志文件(grizzled)，并且继承几个简单的单元测试(SparkTest)，能够很好的检测环境问题。</code></pre>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">test(&quot;empsRDD rowcount&quot;) &#123; spark &#x3D;&gt;</span><br><span class="line">  val empsRDD &#x3D; spark.sparkContext.parallelize(getInputData(&quot;&#x2F;data&#x2F;employees.json&quot;), 5)</span><br><span class="line">  assert(empsRDD.count &#x3D;&#x3D;&#x3D; 1000)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">test(&quot;titlesRDD rowcount&quot;) &#123; spark &#x3D;&gt;</span><br><span class="line">  val titlesRDD &#x3D; spark.sparkContext.parallelize(getInputData(&quot;&#x2F;data&#x2F;titles.json&quot;), 5)</span><br><span class="line">  assert(titlesRDD.count &#x3D;&#x3D;&#x3D; 1470)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">private def getInputData(name: String): Seq[String] &#x3D; &#123;</span><br><span class="line">  val is: InputStream &#x3D; getClass.getResourceAsStream(name)</span><br><span class="line">  scala.io.Source.fromInputStream(is).getLines.toSeq</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="常见业务处理"><a href="#常见业务处理" class="headerlink" title="常见业务处理"></a>常见业务处理</h2><h3 id="WordCount（词频统计）"><a href="#WordCount（词频统计）" class="headerlink" title="WordCount（词频统计）"></a>WordCount（词频统计）</h3><p>词频统计就是统计一个或多个单词出现的次数，通过将单词转化为计数对(key-value)，即(word,count)，得到最终所有单词出现的次数。<br>具体函数的选择可以参考<a href="./Spark%E8%81%9A%E5%90%88%E7%AE%97%E5%AD%90.md">Spark聚合算子</a>。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">val words &#x3D; Array(&quot;one&quot;, &quot;two&quot;, &quot;two&quot;, &quot;three&quot;, &quot;three&quot;, &quot;three&quot;)</span><br><span class="line">val wordPairsRDD &#x3D; sc.parallelize(words).map(word &#x3D;&gt; (word, 1))</span><br><span class="line">val wordCountsWithReduce &#x3D; wordPairsRDD.reduceByKey(_ + _)</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="AvgAge（平均年龄）"><a href="#AvgAge（平均年龄）" class="headerlink" title="AvgAge（平均年龄）"></a>AvgAge（平均年龄）</h3><p>平均年龄是很常见的业务需求，通过将所有年龄进行相加得到总年龄，然后再除以总人数，最终得到平均年龄，这可以测试大数据量的计算能力。<br>数据格式(id-age)：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">1,18</span><br><span class="line">2,54</span><br><span class="line">3,47</span><br><span class="line">4,11</span><br><span class="line">5,26</span><br><span class="line">6,8</span><br><span class="line">7,12</span><br><span class="line">8,3</span><br><span class="line">9,24</span><br><span class="line">10,31</span><br><span class="line">11,32</span><br></pre></td></tr></table></figure>
+<p>案例实现</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">val ageRDD &#x3D; sc.sparkContext.parallelize(readDataFile, 20)</span><br><span class="line">      .map(_.split(&quot;,&quot;))</span><br><span class="line">      .filter(_.length &#x3D;&#x3D; 2)</span><br><span class="line">      </span><br><span class="line">&#x2F;&#x2F; reduce 实现</span><br><span class="line">&#x2F;&#x2F; totalAge: Infinity</span><br><span class="line">&#x2F;&#x2F; totalAge: 2955154.0</span><br><span class="line">&#x2F;&#x2F;    val totalAge &#x3D; ageRDD.map(_(1)).reduce(_ + _).toDouble</span><br><span class="line">val totalAge &#x3D; ageRDD.map(_(1).toLong).reduce(_ + _).toDouble</span><br><span class="line">val count &#x3D; ageRDD.count.toDouble</span><br><span class="line">val avgAge &#x3D; totalAge &#x2F; count</span><br><span class="line">info(s&quot;totalAge: $totalAge&quot;)</span><br><span class="line">info(s&quot;count: $count&quot;)</span><br><span class="line">info(s&quot;avg age : $avgAge&quot;)</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; aggregate 实现</span><br><span class="line">type scoreCount &#x3D; (Double, Int)</span><br><span class="line">val avgAge &#x3D; ageRDD.map(c &#x3D;&gt; (c(1).toDouble, 1))</span><br><span class="line">  .aggregate((0.0, 0))(</span><br><span class="line">    (a: scoreCount, b: scoreCount) &#x3D;&gt; (a._1 + b._1, a._2 + b._2),</span><br><span class="line">    (a: scoreCount, b: scoreCount) &#x3D;&gt; &#123;</span><br><span class="line">      ((a._1 + b._1) &#x2F; (a._2 + b._2) , 1)</span><br><span class="line">    &#125;</span><br><span class="line">  )._1</span><br><span class="line">info(s&quot;avg age : $avgAge&quot;)</span><br></pre></td></tr></table></figure>
+<p>案例相对简单，但如果对于海量数据场景就需要考虑一些额外的东西：</p>
+<ol>
+<li>整数溢出：在<code>reduce</code>实现中，若使用int进行age累加，有可能会导致溢出，换成long可以一定程度避免，但对于数据值较大或者数据量很大时还是会出现；</li>
+<li>数据过大：当partition中的数据量过大，导致超过task的内存范围，可能也会导致RPC传输的数据包过大；</li>
+</ol>
+<p>这种计算通常是通过<code>分治</code>的方式进行计算，因为案例数据较简单，但大部分生产数据都会有<code>分类</code>的存在，先通过分类计算出该指标值，然后再将所有分类的指标值进行聚合计算，这就可以减少计算的数据量。案例中<code>aggregate</code>的实现就是基于此思想，先通过partition累加，partition间在进行聚合运算，最终得到avgAge。</p>
+]]></content>
+      <categories>
+        <category>技术</category>
+      </categories>
+      <tags>
+        <tag>Spark</tag>
+        <tag>大数据</tag>
+        <tag>Demo</tag>
+      </tags>
   </entry>
   <entry>
     <title>Debezium常见问题</title>
