@@ -1206,7 +1206,7 @@ pre .javascript .function {
   border: 2px solid #333;
   display: block;
   margin: 0 auto;
-  max-width: 96px;
+  max-width: 128px;
   padding: 2px;
   border-radius: 50%;
 }
@@ -1245,7 +1245,7 @@ pre .javascript .function {
 }
 .links-of-author a::before,
 .links-of-author span.exturl::before {
-  background: #ecd038;
+  background: #e963ff;
   border-radius: 50%;
   content: ' ';
   display: inline-block;
