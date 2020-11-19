@@ -1,37 +1,6 @@
-## Welcome to GitHub Pages
+## ClownfishYang 的博客
+博客地址为：[ClownfishYang Blog](https://clownfishyang.github.io/)  
+搭建框架：[hexo](https://hexo.io/) + [next theme](https://github.com/next-theme/hexo-theme-next)  
+搭建过程可能会遇到的问题或者常见问题都放在[Hexo Next搭建博客问题](https://clownfishyang.github.io/2020/11/03/Hexo%20Next%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2%E9%97%AE%E9%A2%98/#more)，后续遇到的问题也会持续更新到该博文中。  
 
-You can use the [editor on GitHub](https://github.com/ClownfishYang/ClownfishYang.github.io/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
-
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
-
-### Markdown
-
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
-
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/ClownfishYang/ClownfishYang.github.io/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+> 主要用于记录中问题，也会用来记录一些感想感悟什么的，想到什么就记录什么...

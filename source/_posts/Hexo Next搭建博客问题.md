@@ -218,6 +218,23 @@ avatar:
   # If true, the avatar will be rotated with the cursor.
   rotated: true
 ```
+头像的大小可以通过修改主题`style`或者修改`themes/source/css/_variables/base.styl`的css。
+```
+# 修改base.styl
+$site-author-image-width              = 128px;
+$site-author-image-border-width       = 2px;
+$site-author-image-border-color       = $black-dim;
+```
+
+### 网页图标
+网页图标可以通过修改配置实现,图标地址存放在`themes/source/images`目录下。
+```
+favicon:
+  small: /images/favicon-16x16-my.png
+  medium: /images/favicon-32x32-my.png
+  apple_touch_icon: /images/apple-touch-icon-my.png
+  safari_pinned_tab: /images/logo.svg
+```
 
 ### Github角落
 [Github角落实现效果](https://tholman.com/github-corners/)
