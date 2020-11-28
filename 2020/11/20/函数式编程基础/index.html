@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-my.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-my.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-my.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.min.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"clownfishyang.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="函数式编程（Functional Programming）函数式编程的起源，是一门叫做范畴论,category theory的数学分支。在计算机科学中，函数式编程是一种编程范式(programming paradigm,构建计算机程序和结构的方法和风格)，将计算视为数学函数的求值过程并避免改变状态和可变的数据，即使用函数来抽象作用在数据之上的控制流和操作，消除副作用并减少状态改变。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="函数式编程基础">
+<meta property="og:url" content="https://clownfishyang.github.io/2020/11/20/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/index.html">
+<meta property="og:site_name" content="ClownfishYang Blog">
+<meta property="og:description" content="函数式编程（Functional Programming）函数式编程的起源，是一门叫做范畴论,category theory的数学分支。在计算机科学中，函数式编程是一种编程范式(programming paradigm,构建计算机程序和结构的方法和风格)，将计算视为数学函数的求值过程并避免改变状态和可变的数据，即使用函数来抽象作用在数据之上的控制流和操作，消除副作用并减少状态改变。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://clownfishyang.github.io/2020/11/20/images/function-sets.gif">
+<meta property="og:image" content="https://clownfishyang.github.io/2020/11/20/images/relation-not-function.gif">
+<meta property="og:image" content="https://clownfishyang.github.io/2020/11/20/images/pure-function.png">
+<meta property="og:image" content="https://clownfishyang.github.io/2020/11/20/images/function-compose.png">
+<meta property="og:image" content="https://clownfishyang.github.io/2020/11/20/images/function-compose2.png">
+<meta property="article:published_time" content="2020-11-20T02:03:54.000Z">
+<meta property="article:modified_time" content="2020-11-28T02:03:20.932Z">
+<meta property="article:author" content="ClownfishYang">
+<meta property="article:tag" content="基础">
+<meta property="article:tag" content="函数式编程">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://clownfishyang.github.io/2020/11/20/images/function-sets.gif">
+
+<link rel="canonical" href="https://clownfishyang.github.io/2020/11/20/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>函数式编程基础 | ClownfishYang Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">ClownfishYang Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+  <a href="https://github.com/ClownfishYang" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://clownfishyang.github.io/2020/11/20/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar-my.jpg">
+      <meta itemprop="name" content="ClownfishYang">
+      <meta itemprop="description" content="须知少时凌云志，曾许人间第一流。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ClownfishYang Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          函数式编程基础<a href="https://github.com/ClownfishYang/ClownfishYang.github.io/tree/master/source/_posts/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-11-20 10:03:54" itemprop="dateCreated datePublished" datetime="2020-11-20T10:03:54+08:00">2020-11-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-11-28 10:03:20" itemprop="dateModified" datetime="2020-11-28T10:03:20+08:00">2020-11-28</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8A%80%E6%9C%AF/" itemprop="url" rel="index"><span itemprop="name">技术</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.8k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="函数式编程（Functional-Programming）"><a href="#函数式编程（Functional-Programming）" class="headerlink" title="函数式编程（Functional Programming）"></a>函数式编程（Functional Programming）</h2><p>函数式编程的起源，是一门叫做<a href="">范畴论,category theory</a>的数学分支。在计算机科学中，函数式编程是一种编程范式(programming paradigm,构建计算机程序和结构的方法和风格)，将计算视为数学函数的求值过程并避免改变状态和可变的数据，即使用函数来抽象作用在数据之上的控制流和操作，消除副作用并减少状态改变。</p>
+<a id="more"></a>
+<h3 id="范畴论"><a href="#范畴论" class="headerlink" title="范畴论"></a>范畴论</h3><h3 id="纯函数（Pure-Function）"><a href="#纯函数（Pure-Function）" class="headerlink" title="纯函数（Pure Function）"></a>纯函数（Pure Function）</h3><p><code>函数</code>是不同数值之间的特殊关系，每个输入值返回且只有一个输出值，即函数表示数值间的关系。</p>
+<p><img src="../images/function-sets.gif" alt="function-sets"></p>
+<p>不是函数关系，输入值5指向了多个输出：</p>
+<p><img src="../images/relation-not-function.gif" alt="relation-not-function"></p>
+<p><code>纯函数</code>也称为函数的纯粹性（Purity），指没有副作用的函数，对于相同的输入，永远返回相同的结果。<br>函数式编程分为纯函数式和函数式，纯函数式主要在于确保函数遵循函数式范式，只依赖实际参数，而不受全局或局部状态的影响。纯函数式的好处就是更容易的实现惰性求值，简化了并行计算。<br><img src="../images/pure-function.png" alt="pure-function"></p>
+<p>函数与纯函数：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">var xs &#x3D; [1,2,3,4,5];</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 纯的</span><br><span class="line">xs.slice(0,3);</span><br><span class="line">&#x2F;&#x2F;&#x3D;&gt; [1,2,3]</span><br><span class="line"></span><br><span class="line">xs.slice(0,3);</span><br><span class="line">&#x2F;&#x2F;&#x3D;&gt; [1,2,3]</span><br><span class="line"></span><br><span class="line">xs.slice(0,3);</span><br><span class="line">&#x2F;&#x2F;&#x3D;&gt; [1,2,3]</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 不纯的</span><br><span class="line">xs.splice(0,3);</span><br><span class="line">&#x2F;&#x2F;&#x3D;&gt; [1,2,3]</span><br><span class="line"></span><br><span class="line">xs.splice(0,3);</span><br><span class="line">&#x2F;&#x2F;&#x3D;&gt; [4,5]</span><br><span class="line"></span><br><span class="line">xs.splice(0,3);</span><br><span class="line">&#x2F;&#x2F;&#x3D;&gt; []</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 不纯的</span><br><span class="line">var minimum &#x3D; 21;</span><br><span class="line"></span><br><span class="line">var checkAge &#x3D; function(age) &#123;</span><br><span class="line">  return age &gt;&#x3D; minimum;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 纯的</span><br><span class="line">var checkAge &#x3D; function(age) &#123;</span><br><span class="line">  var minimum &#x3D; 21;</span><br><span class="line">  return age &gt;&#x3D; minimum;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p><code>slice</code>和<code>splice</code>函数都是对数组进行切片，但是<code>slice</code>函数对相同的参数总是返回相同的结果；而<code>splice</code>函数因为在原数组上进行操作，却得到了不同的结果，产生了副作用。<br><code>checkAge</code>函数的结果都取决于<code>minimum</code>这个变量值，但第一个<code>checkAge</code>函数使用了外部变量，即引入了外部状态，函数的结果受外部状态的影响；而第二个<code>chengAge</code>函数的结果不受状态的影响。</p>
+<ol>
+<li>副作用(Side Effects)：副作用指的是状态的变化（state mutation），在计算过程中，函数内部与外部交互，产生其他结果。</li>
+<li>引用透明(Referential Transparency)：函数的执行不依赖外部状态，只依赖于输入的参数，对于相同的输入，总是得到相同的输出。</li>
+<li>不变性(Immutability)：为了得到引用透明性，任何值都是不可变的。</li>
+</ol>
+<h3 id="函数式编程的特点"><a href="#函数式编程的特点" class="headerlink" title="函数式编程的特点"></a>函数式编程的特点</h3><ol>
+<li><p>函数是一等公民(First-class Function)：函数与其他数据类型一样，可以作为变量，也可作为参数传入到另一函数中，或者作为其他函数的返回值。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">var print &#x3D; function(i) &#123; console.log(i); &#125;;</span><br><span class="line">[1,2,3].forEach(print);</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 函数作为参数示例</span><br><span class="line">const getServerStuff &#x3D; callback &#x3D;&gt; ajaxCall(json &#x3D;&gt; callback(json));</span><br><span class="line">const getServerStuff &#x3D; ajaxCall;</span><br></pre></td></tr></table></figure>
+<p>函数作为参数，能够减少代码量，降低代码维护成本以及提高重用性。</p>
+</li>
+<li><p>使用expression而不是statement<br>表达式(expression)是一个单纯的运算过程，总是有返回值；语句(statement)是某种操作，没有返回值。函数式编程中只有expression，变量、函数都是expression。<br>函数式编程一切都是为了处理运算(computation)，而不考虑系统的IO，statement属于系统的IO操作，所以排斥在外，将IO限制到最小，减少不必要的IO，保持计算的纯粹性。</p>
+</li>
+<li><p>高阶函数(Higher order Function)：接受其他函数作为入参的一种函数，达到更高程度的抽象。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">def add(x: Int, y: Int, f: Int &#x3D;&gt; Int) &#x3D; f(x) + f(y)</span><br><span class="line">println(add(-5,6,Math.abs))</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>闭包(closure)：对外部作用域的变量进行引用的内部函数就称为闭包。函数的内部调用数据对于使用者来说是不透明的，引用的外部变量是动态，可以通过改变其值进而改变函数的运行效果。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">var factor &#x3D; 3</span><br><span class="line">def multiplier(x):</span><br><span class="line">  return factor * x</span><br><span class="line"></span><br><span class="line">print multiplier(2)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>柯里化(curry)：将接收多个参数的函数变换成一个单一参数(函数的最初参数)的函数，并且返回的新函数能够接受余下参数且返回结果。概念是只传递函数的一部分参数来调用(局部调用)，让其返回函数处理余下的参数。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">def pow(x):</span><br><span class="line">  def pw(y):</span><br><span class="line">    return math.pow(y,x)</span><br><span class="line">  return pw</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 10 ^ 2</span><br><span class="line">pow2 &#x3D; pow(2)</span><br><span class="line">print(pow2(10))</span><br></pre></td></tr></table></figure>
+<p>通过柯里化实现非常灵活的功能，如果需要计算3次方或n次方，只需要修改pow传入参数即可，通过修改传入参数的方式改变代码逻辑。</p>
+</li>
+<li><p>组合函数(compose)：将简单函数组合成更复杂函数的行为或机制，像数学中的函数组成一样，每个函数的结果作为下一个函数的参数传递，而最后一个函数的结果是整个函数的结果。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; 两个简单函数</span><br><span class="line">def add10(x:Int):Int &#x3D; x + 10</span><br><span class="line">def mult5(x:Int):Int &#x3D; x * 5</span><br><span class="line">&#x2F;&#x2F; 先进行add10，然后在mult5</span><br><span class="line">def mult5AfterAdd10(x:Int) &#x3D; mult5(add10(x))</span><br></pre></td></tr></table></figure>
+<p>在数学中，<code>f ∘ g</code>是函数组合，称为”f由g组合”，或”f after g”。因此<code>(f ∘ g)(x)</code>等价于<code>f(g(x))</code>表示调用g之后调用f。</p>
+</li>
+</ol>
+<p><img src="../images/function-compose.png" alt="function-compose"></p>
+<p>如图所示，X和Y之间的变形关系是函数f，Y和Z的变形关系是函数g，那么X和Z之间的关系就是g和f的组合函数<code>(g ∘ f)</code>。<br>函数的组合还必须满足结合律：</p>
+<p><img src="../images/function-compose2.png" alt="function-compose2"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E5%9F%BA%E7%A1%80/" rel="tag"><i class="fa fa-tag"></i> 基础</a>
+              <a href="/tags/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/" rel="tag"><i class="fa fa-tag"></i> 函数式编程</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/11/13/Spark%E8%81%9A%E5%90%88%E7%AE%97%E5%AD%90/" rel="prev" title="SparkRDD聚合算子">
+      <i class="fa fa-chevron-left"></i> SparkRDD聚合算子
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B%EF%BC%88Functional-Programming%EF%BC%89"><span class="nav-number">1.</span> <span class="nav-text">函数式编程（Functional Programming）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%8C%83%E7%95%B4%E8%AE%BA"><span class="nav-number">1.1.</span> <span class="nav-text">范畴论</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BA%AF%E5%87%BD%E6%95%B0%EF%BC%88Pure-Function%EF%BC%89"><span class="nav-number">1.2.</span> <span class="nav-text">纯函数（Pure Function）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B%E7%9A%84%E7%89%B9%E7%82%B9"><span class="nav-number">1.3.</span> <span class="nav-text">函数式编程的特点</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="ClownfishYang"
+      src="/images/avatar-my.jpg">
+  <p class="site-author-name" itemprop="name">ClownfishYang</p>
+  <div class="site-description" itemprop="description">须知少时凌云志，曾许人间第一流。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">6</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ClownfishYang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ClownfishYang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:ClownfishYang@163.com" title="E-Mail → mailto:ClownfishYang@163.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ClownfishYang</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">41k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">37 分钟</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='0,0,255' opacity='0.5' zIndex='-1' count='99' src="//cdn.jsdelivr.net/gh/theme-next/theme-next-canvas-nest@1/canvas-nest.min.js"></script>
+  <script size="300" alpha="0.6" zIndex="-1" src="/lib/canvas-ribbon/canvas-ribbon.js"></script>
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
